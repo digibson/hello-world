@@ -1,0 +1,129 @@
+/* Set styling of global elements */
+
+body,
+html {
+    width: 100%;
+    height: 100%;
+}
+
+/* TO COMPLETE */
+
+
+/* Set custom font for body and headers from google fonts */
+/* ADD FONT WEIGHT IN? */
+body,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: 'Open Sans',Helvetica,Arial,sans-serif;
+}
+
+p {
+    font-family: 'Open Sans Condensed',Helvetica,Arial,sans-serif;
+}
+
+/* CONTAINER MODIFICATIONS */
+.text-vertical-middle {
+    display: table-cell;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.text-vertical-middle h1 {
+    margin: 0;
+    padding: 0;
+    font-size: 4.5em;
+    font-weight: 700;
+}
+
+.text-vertical-middle h1, h3 {
+    color: #fff;
+}
+
+/* CUSTOM COLOUR SCHEME*/
+.bg-custom-red {
+  color: #fff;
+  background-color: #c90000;
+}
+a.bg-custom-red:hover,
+a.bg-custom-red:focus {
+  background-color: #fff; /* TO ADAPT THIS COLOR */
+}
+
+.text-custom-red {
+  color: #c90000;
+}
+
+a.text-icon-button {
+  color: #fff;
+}
+
+a.text-icon-button:hover,
+a.text-icon-button:focus,
+a.text-icon-button:active {
+  color: #c0c0c0;/* TO ADAPT THIS COLOR */
+}
+
+a.trans-icon-button {
+  color: rgba(255,255,255,0.7);
+}
+
+a.trans-icon-button:hover,
+a.trans-icon-button:focus,
+a.trans-icon-button:active {
+  color: rgba(255,255,255,0.9);/* TO ADAPT THIS COLOR */
+}
+
+.trans-icon-text {
+  color: rgba(0,0,0,0.7);
+}
+
+
+@media (max-width: 767px) {
+  // Align text for xs screens only.
+  .text-xs-center {
+    text-align: center;
+  } 
+  .text-xs-right {
+    text-align: right;
+  } 
+  .text-xs-left {
+    text-align: left;
+  } 
+}
+
+.low-pad {
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+/* Landing page header button classes */
+.btn-header {
+    border-radius: 6;
+    color: #fff;
+    background-color: rgba(255,255,255,0.4);
+}
+
+.btn-header:hover,
+.btn-header:focus,
+.btn-header:active {
+    color: #fff;
+    background-color: rgba(255,255,255,0.7);
+}
+
+/* Header background etc class - does this override bootstrap class?*/
+
+.header {
+    display: table;
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: url(../img/typewriter.jpg) no-repeat center center scroll;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    background-size: cover;
+    -o-background-size: cover;
+}

@@ -1,0 +1,55 @@
+/* Set styling of global elements */
+
+body,
+html {
+    width: 100%;
+    height: 100%;
+}
+
+/* TO COMPLETE */
+
+
+/* Set custom font for body and headers from google fonts */
+/* ADD FONT WEIGHT IN? */
+body {
+    font-family: 'Monserrat',Helvetica,Arial,sans-serif;
+    font-weight: 500;
+    color: #545454;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: 'Roboto',Helvetica,Arial,sans-serif;
+    font-weight: 700;
+}
+
+.blog-title {
+    font-size: 24px;
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+
+.blog-side-title {
+    font-size: 18px;
+}
+
+.blog-date {
+    font-family: 'Monserrat',Helvetica,Arial,sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    color: #27a0f7;
+    margin-top: 5px;
+    margin-bottom: 10px;
+}
+
+.blog-para {
+    font-size: 12px;
+    text-align: justify;
+    text-justify: inter-word;
+}
+
+
