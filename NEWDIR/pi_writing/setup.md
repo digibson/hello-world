@@ -42,7 +42,7 @@ My main problem with addressing devices across a network using IP addresses is r
 
 Without having to pay to reserve a domain name, I would like to be able to type <kbd>cookbook.southparkley.com</kbd>, or simply even <kbd>cookbook</kbd>, into the browser of a device connected to my local network and have the cookbook website delivered.  
 
-This is where an understanding of a DNS
+The free linux program dnsmasq is capable of acting as a simple DNS server on the raspberry pi for the purposes that I need.  While a router is often set to a default DNS server address in order to resolve a domain name into an IP address, it can be redirected towards different primary and secondary DNS server addresses.  In my case, I intend to have the router check the raspberry pi DNS server to determine if it can find the IP address first, and serve that up where found.  This will work fine for my intranet, but the internal DNS server will not know how to deal with anything other than internal website requests.  Unresolved queries (being anything seeking external content) can then be passed upstream to external DNS servers to field the request.  While it may create large files, system logs can also be stored to track the requests that are being made for external websites. 
 
 ### The SMB server
 
