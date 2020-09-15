@@ -38,9 +38,89 @@ ufw, fail2ban, router firewall and disabling things like Upnp on router to ensur
 ### The DNS Server
 My main problem with addressing devices across a network using IP addresses is remembering what the IP address of a given device actually is.  I also don't like the idea that, once an intranet site is established on a webserver I would need to type the IP address into a browser to find the correct website.  It's even harder when multiple websites are going to be hosted on the same server.  
 
-Without having to pay to reserve a domain name, I would like to be able to type `cookbook.southparkley.com`, or simply even `cookbook`, into the browser of a device connected to my local network and have the cookbook website delivered.  
+Without having to pay to reserve a domain name, I would like to be able to type `cookbook.southparkley.net`, or  even `cookbook`, into the browser of a device connected to my local network and have the cookbook website delivered.  
 
-The free linux program dnsmasq is capable of acting as a simple DNS server on the raspberry pi for the purposes that I need.  While a router is often set to a default DNS server address in order to resolve a domain name into an IP address, it can be redirected towards different primary and secondary DNS server addresses.  In my case, I intend to have the router check the raspberry pi DNS server to determine if it can find the IP address first, and serve that up where found.  This will work fine for my intranet, but the internal DNS server will not know how to deal with anything other than internal website requests.  Unresolved queries (being anything seeking external content) can then be passed upstream to external DNS servers to field the request.  While it may create large files, system logs can also be stored to track the requests that are being made for external websites. 
+The free linux program dnsmasq is capable of acting as a simple DNS server on the raspberry pi for the purposes that I need.  While a router is often set to a default DNS server address in order to resolve a domain name into an IP address, it can be redirected towards different primary and secondary DNS server addresses.  In my case, I intend to have the router check the raspberry pi DNS server to determine if it can find the IP address first, and serve that up where found.  This will work fine for my intranet, but the internal DNS server will not know how to deal with anything other than internal website requests.  Unresolved queries (being anything seeking external content) can then be passed upstream to external DNS servers to field the request.  While it may create large files, system logs can also be stored to track the requests that are being made for external websites.
+
+The first step is to ensure the repository is up to date and that packages are upgraded.
+
+```
+$ sudo apt-get update && sudo apt-get upgrade -y && sudo reboot
+```
+TO DETERMINE IF BELOW IS REQUIRED - ALL COPIED FROM ELSEWHERE:
+
+Ubuntu 18.04 comes with systemd-resolve which you need to disable since it binds to port 53 which will conflict with Dnsmasq port.  Run the following commands to disable the resolved service:
+```
+sudo systemctl disable systemd-resolved
+sudo systemctl stop systemd-resolved
+```
+```
+$ ls -lh /etc/resolv.conf
+lrwxrwxrwx 1 root root 39 Aug  8 15:52 /etc/resolv.conf -> ../run/systemd/resolve/stub-resolv.conf
+$ sudo rm /etc/resolv.conf
+```
+Then create new resolv.conf file.
+```
+echo "nameserver 8.8.8.8" > /etc/resolv.conf
+```
+ACTUAL YOUTUBE VIDEO:
+```
+sudo apt-get install dnsmasq
+```
+The main configuration file for Dnsmasq is `/etc/dnsmasq.conf`. Configure Dnsmasq by modifying this file.
+```
+sudo vi /etc/dnsmasq.conf
+```
+All options are commented out apart from the final line which permits additional settings to be applied in a separate file leaving this original file intact as a reference.  
+```
+$ sudo conf-dir=/etc/dnsmasq.d
+```
+```
+$ sudo vi /etc/dnsmasq.d/southparkley.net
+```
+Edit the file as follows:
+```
+no-dhcp-interface=ens160 #OR THE ACTUAL ETHERNET INTERFACE FOR THE PI
+bogus-priv
+domain=southparkley.net
+expand-hosts
+no-hosts # do not look at the local /etc/hosts file for addresses
+addn-hosts=/etc/hostnames.txt # OR ANY OTHER FILENAME
+local=/southparkley.net/ #NEVER RESOLVE THIS EXTERNALLY
+domain-needed #never forward requests without dots etc in
+no-resolv
+no-poll
+server=8.8.8.8
+server=8.8.4.4
+```
+
+The alternative is to use etc hosts where there are localhost items too.
+```
+$ sudo vi /etc/hostnames.txt
+```
+
+```
+192.168.157.23 nest.southparkley.net nest
+192.168.157.30 swift.southparkley.net swift
+192.168.157.31 songthrush
+```
+Start dnsmasq
+```
+$ sudo systemctl start dnsmasq
+```
+If the service needs to be restarted after an edit, the following command is used:
+```
+$ sudo systemctl restart dnsmasq
+```
+Ensure this service starts automatically each time the system  boots up.
+```
+$ sudo systemctl is-enabled dnsmasq
+```
+Now the router DNS server must be pointed at the IP address of the raspberry pi, and the secondary server can be pointed towards Google's DNS server (8.8.8.8) in case the raspberry pi is down.
+
+LOOK FURTHER AT DNS CACHING ETC
+
+
 
 ### The SMB server
 
