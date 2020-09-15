@@ -38,7 +38,7 @@ ufw, fail2ban, router firewall and disabling things like Upnp on router to ensur
 ### The DNS Server
 My main problem with addressing devices across a network using IP addresses is remembering what the IP address of a given device actually is.  I also don't like the idea that, once an intranet site is established on a webserver I would need to type the IP address into a browser to find the correct website.  It's even harder when multiple websites are going to be hosted on the same server.  
 
-Without having to pay to reserve a domain name, I would like to be able to type `cookbook.southparkley.com`, or simply even <kbd>cookbook</kbd>, into the browser of a device connected to my local network and have the cookbook website delivered.  
+Without having to pay to reserve a domain name, I would like to be able to type `cookbook.southparkley.com`, or simply even `cookbook`, into the browser of a device connected to my local network and have the cookbook website delivered.  
 
 The free linux program dnsmasq is capable of acting as a simple DNS server on the raspberry pi for the purposes that I need.  While a router is often set to a default DNS server address in order to resolve a domain name into an IP address, it can be redirected towards different primary and secondary DNS server addresses.  In my case, I intend to have the router check the raspberry pi DNS server to determine if it can find the IP address first, and serve that up where found.  This will work fine for my intranet, but the internal DNS server will not know how to deal with anything other than internal website requests.  Unresolved queries (being anything seeking external content) can then be passed upstream to external DNS servers to field the request.  While it may create large files, system logs can also be stored to track the requests that are being made for external websites. 
 
@@ -64,6 +64,7 @@ sudo pw
 Test here
 
 Type <kbd>Ctrl+Shift+M</kbd> for the preview.
+Type `Ctrl+Shift+M` for the preview.
 
 | Header One     | Header Two     |
 | :------------- | :------------- |
