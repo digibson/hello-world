@@ -45,11 +45,40 @@ The free linux program dnsmasq is capable of acting as a simple DNS server on th
 The first step is to ensure the repository is up to date and that packages are upgraded.
 
 ```
-$ sudo apt-get update && sudo apt-get upgrade -y && sudo reboot
+$ sudo apt update && sudo apt upgrade -y && sudo reboot
 ```
-TO DETERMINE IF BELOW IS REQUIRED - ALL COPIED FROM ELSEWHERE:
 
-Ubuntu 18.04 comes with systemd-resolve which you need to disable since it binds to port 53 which will conflict with Dnsmasq port.  Run the following commands to disable the resolved service:
+
+NEW BIT ON DISABLING SYSTEMD-RESOLVE
+
+Recent versions of Ubuntu use systemd-resolve which uses port 53 and will interfere with DNSMasq.  It must be disabled prior to installation of DNSMasq.  I found two different approaches to doing this.  Firstly, it's best to confirm that the service is already running and binding port 53.  First ensure that net-tools is installed:
+```
+$ sudo apt install net-tools
+```
+#### First technique for disabling resolved
+
+The run the following command to view the services that are currently running, where l only shows listening sockets, t tells it to display tcp connections, n instructs it to show numerical addresses, p enables the showing of process ID and the process name, and grep -w shows the matching of the exact string.  Omitting the grep command will show all services matching the criteria above.  
+```
+$ netstat -ltnp | grep -w ':53'
+```
+When confirming, run the following commands:
+```
+sudo systemctl stop systemd-resolved
+```
+Then edit `/etc/systemd/resolved.conf` to ensure only the following items are uncommented:
+```
+[Resolve]
+DNS=8.8.8.8
+DNSStubListener=no
+```
+After editing the file, update the symbolic link as follows:
+```
+sudo ln -sf /ru/systemd/resolve/resolv.conf /etc/resolv.conf
+```
+Check whether the service is still listening on Port 53 with the earlier command (DOES SERVICE NEED A RESTART?)
+
+#### Second technique for disabling resolved
+
 ```
 sudo systemctl disable systemd-resolved
 sudo systemctl stop systemd-resolved
@@ -63,9 +92,11 @@ Then create new resolv.conf file.
 ```
 echo "nameserver 8.8.8.8" > /etc/resolv.conf
 ```
+#### Configuring DNSMasq
+
 ACTUAL YOUTUBE VIDEO:
 ```
-sudo apt-get install dnsmasq
+sudo apt install dnsmasq
 ```
 The main configuration file for Dnsmasq is `/etc/dnsmasq.conf`. Configure Dnsmasq by modifying this file.
 ```
