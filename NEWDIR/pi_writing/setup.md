@@ -5,7 +5,7 @@ There's nothing like a global pandemic to reinvigorate my interest in producing 
 
 It's worth noting, probably for my own interest, that this isn't going to be a public blog.  This is going to be an accumulation of basic knowledge that comes from a general interest in tinkering and through reading reams of resources on the web. This blog will be part of that development work and will serve primarily as an aide memoire in order that I understand how I get to whatever I get to.  The blog is only part of this.  I intend to create webpages using the Jekyll static website production tool, introduce a Samba server for serving files within the home network, have a DNS server which makes the internal website and raspberry pi boards easier to locate than by using their IP addresses, and to serve music and movies to the local network.
 
-As an amateur, I have much to cover!
+Given I'm a complete amateur, I have a lot to cover!
 
 ### Installation of operating system
 The raspberry pi has seen a number of revisions over the years with each model becoming more and more powerful.  I have a couple of pi 2B models to start testing on but intend to get a pi 4B with 8GB RAM for the main server.  
@@ -14,7 +14,7 @@ The operating system is installed on a micro SD card by downloading an image and
 
 For the main server, I decided to use Ubuntu Server rather than raspbian or any other operating system.  The initial experiment was using a standard SD card installation which gradually introduced other USB storage.  
 
-### Networking access
+### Network access
 The foundations of the initial setup involves securing the network that the hardware will be located on.  Having read a little about network security, wifi SSID names relating to the internet service provider and their own router hardware are a no-no given attackers can scan areas for that information prior to performing brute force attacks using password rainbow tables relating to that hardware.  Furthermore, standard alterations to the IP ranges and standard router IP address should be made to avoid the exploitation of firmware faults that rely on the defaults being in place.  
 
 I  purchased a router that provides more configuration options than an ISP-provided router and that combined with a strong administrator password, a lengthy wifi password, a separate guest network that can be switched on and off, a firewall that serves to restrict brute-force attacks, hardware address filtering and IP address allocation, and the ability to control or shut down protocols that serve to automatically allow devices to open and close ports, permits a choice of DNS server, provides me with better security and options.
@@ -22,6 +22,8 @@ I  purchased a router that provides more configuration options than an ISP-provi
 On my router I altered the default network IP address of the router from 192.168.1.1 to 192.168.157.23, set a DHCP range of 100 different addresses from 192.168.157.50 to 192.168.157.149 for DHCP allocation, and reserved addresses from 192.168.157.30 to 192.168.157.49 to automatically allocate to certain devices using their MAC addresses to static IP addresses, this being directed towards wifi repeaters used within the house and the raspberry pi modules that would remain connected to the network.
 
 In terms of the outwardly facing SSIDs I chose to name them after birds, with "eagle" being assigned to the 2.4GHz band and "falcon" to the 5GHz bands.  On top of this, I named the guest network "spiderweb" for both bands.   
+
+CONSIDERATION TO STACKING SIMILAR FORM FACTOR RPIS AND USING AN UNMANAGED NETWORK SWITCH
 
 ### Initial setup of the raspberry pi
 First boot, wifi configuration
@@ -33,39 +35,99 @@ Putting code here for iface setup
 
 ### Access
 Access will be permitted by SSH.  Secured locally on the network.
+
 ### Security
 ufw, fail2ban, router firewall and disabling things like Upnp on router to ensure no external ports may be opened.
+
+### Power management
+While the raspberry pi is a low power device, it doesn't hurt to reduce power consumption further.  Where wifi enabled devices are connected through the ethernet ports, the wifi can be turned off.  It follows that Bluetooth can also be switch off where not required.  For a headless system, the HDMI port can also be disabled although it would prevent future offline login if network access were lost in the future.
+
+{FOLLOW UP HERE WITH DETAILS}  
+
 ### The DNS Server
-My main problem with addressing devices across a network using IP addresses is remembering what the IP address of a given device actually is.  I also don't like the idea that, once an intranet site is established on a webserver I would need to type the IP address into a browser to find the correct website.  It's even harder when multiple websites are going to be hosted on the same server.  
+My main problem with addressing devices across a network using IP addresses is remembering the IP address of a given device.  I also don't like having to type the IP address of a device into a browser to reach a website.  It's even harder when multiple websites are going to be hosted on the same server.  
 
 Without having to pay to reserve a domain name, I would like to be able to type `cookbook.southparkley.net`, or  even `cookbook`, into the browser of a device connected to my local network and have the cookbook website delivered.  
 
-The free linux program dnsmasq is capable of acting as a simple DNS server on the raspberry pi for the purposes that I need.  While a router is often set to a default DNS server address in order to resolve a domain name into an IP address, it can be redirected towards different primary and secondary DNS server addresses.  In my case, I intend to have the router check the raspberry pi DNS server to determine if it can find the IP address first, and serve that up where found.  This will work fine for my intranet, but the internal DNS server will not know how to deal with anything other than internal website requests.  Unresolved queries (being anything seeking external content) can then be passed upstream to external DNS servers to field the request.  While it may create large files, system logs can also be stored to track the requests that are being made for external websites.
+The open source linux program dnsmasq is capable of acting as a simple DNS server on the raspberry pi for the purposes that I need.  While a router is often set to a default DNS server address in order to resolve a domain name into an IP address, it can be redirected towards different primary and secondary DNS server addresses.  In my case, I intend to have the router check the raspberry pi DNS server to determine if it can find the IP address first, and serve that up where found.  This will work fine for my intranet, but the internal DNS server will not know how to deal with anything other than internal website requests.  Unresolved queries (being anything seeking external content) can then be passed upstream to external DNS servers to field the request.  While it may create large files, system logs can also be stored to track the requests that are being made for external websites.
 
 The first step is to ensure the repository is up to date and that packages are upgraded.
+
+{ENSURE THIS INSTRUCTION DOES NOT REPEAT THROUGHOUT}
 
 ```
 $ sudo apt update && sudo apt upgrade -y && sudo reboot
 ```
 
-
-NEW BIT ON DISABLING SYSTEMD-RESOLVE
-
-Recent versions of Ubuntu use systemd-resolve which uses port 53 and will interfere with DNSMasq.  It must be disabled prior to installation of DNSMasq.  I found two different approaches to doing this.  Firstly, it's best to confirm that the service is already running and binding port 53.  First ensure that net-tools is installed:
+A number of testing tools are required when verifying the function of the DNS server so net-tools and dnsutils should be installed:
 ```
-$ sudo apt install net-tools
+$ sudo apt install net-tools && apt install dnsutils
 ```
-#### First technique for disabling resolved
+Recent versions of Ubuntu use systemd-resolve which binds to port 53 and will interfere with DNSMasq.  It must be disabled but not before DNSMasq is installed:
+```
+$ sudo apt install dnsmasq
+```
 
-The run the following command to view the services that are currently running, where l only shows listening sockets, t tells it to display tcp connections, n instructs it to show numerical addresses, p enables the showing of process ID and the process name, and grep -w shows the matching of the exact string.  Omitting the grep command will show all services matching the criteria above.  
+I found two different approaches to removing systemd-resolve and leave both in until one is confirmed as working.  
+
+Prior to making changes to systemd-resolve, it should be confirmed whether any service is already running and binding port 53.
+
+Use the following command to view the services that are currently running, where -l only shows listening sockets, -t requests tcp connections only, -n to show numerical addresses, -p shows the process ID and the process name, and grep -w show items that match the exact string.  Omitting the grep command will show all services matching the criteria above.  
 ```
 $ netstat -ltnp | grep -w ':53'
 ```
-When confirming, run the following commands:
+Where it is confirmed that systemd-resolve is operating on port 53, action must be taken to disable it.
+
+#### First (and favoured) technique for disabling resolved
+Run the following command to stop systemd-resolve
 ```
 sudo systemctl stop systemd-resolved
 ```
-Then edit `/etc/systemd/resolved.conf` to ensure only the following items are uncommented:
+Delete /etc/resolv.conf and create again. This is important, because resolv.conf is a symbolic link to /run/systemd/resolve/stub-resolv.conf by default. If undeleted, the file will be overwritten by systemd on reboot (even though  systemd-resolved was disabled). Also NetworkManager (NM) checks if it is a symbolic link to detect systemd-resolved configuration.
+```
+$ sudo rm /etc/resolv.conf
+$ sudo touch /etc/resolv.conf
+```
+
+
+
+
+
+
+{DO NOT TOUCH `/etc/systemd/resolved.conf` AS IT MAY BE OVERWITTEN ON UPGRADE. INSTEAD DO THE FOLLOWING:}
+```
+$ cat /etc/systemd/resolved.conf.d/noresolved.conf
+[Resolve]
+DNSStubListener=no
+```
+Then restart the service:
+```
+$ sudo systemctl restart systemd-resolved
+```
+OR disable the service:
+```
+$ sudo systemctl disable systemd-resolved.service
+```
+Disable overwriting of /etc/resolv.conf by NM (there is also an option rc-manager, but it does not work, despite it is described in a manual):
+
+```
+$ cat /etc/NetworkManager/conf.d/disableresolv.conf
+[main]
+dns=none
+```
+and restart it:
+```
+$ sudo systemctl restart NetworkManager
+```
+Use dnsmasq for resolving:
+```
+$ cat /etc/resolv.conf
+# Use local dnsmasq for resolving
+nameserver 127.0.0.1
+```
+
+
+DON'T DO THIS - SEE ABOVE: Then edit `/etc/systemd/resolved.conf` to ensure only the following items are uncommented:
 ```
 [Resolve]
 DNS=8.8.8.8
@@ -80,7 +142,9 @@ IS THAT RIGHT OR DOES RUN SIT BELOW /VAR/ ??
 
 Check whether the service is still listening on Port 53 with the earlier command (DOES SERVICE NEED A RESTART?)
 
-CHECK /ETC/RESOLV.CONF - ARCHLINUX PAGE SUGGESTS NAMESERVER ::1 AND NAMESERVER 127.0.0.1 BE THE ONLY NAME SERVERS? 
+TRY RESTARTING SYSTEM TO SEE IF THE CHANGE PERSITS
+
+CHECK /ETC/RESOLV.CONF - ARCHLINUX PAGE SUGGESTS NAMESERVER ::1 AND NAMESERVER 127.0.0.1 BE THE ONLY NAME SERVERS?
 
 #### Second technique for disabling resolved
 
@@ -99,7 +163,7 @@ $ echo "nameserver 8.8.8.8" > /etc/resolv.conf
 ```
 #### Configuring DNSMasq
 
-ACTUAL YOUTUBE VIDEO:
+ACTUAL YOUTUBE VIDEO:  INSTALL BEFORE REMOVING ANYTHING ELSE!!
 ```
 $ sudo apt install dnsmasq
 ```
@@ -190,4 +254,4 @@ Type `Ctrl+Shift+M` for the preview.
 | Header One     | Header Two     |
 | :------------- | :------------- |
 | Item One       | Item Two       |
-|TEST                             | 
+|TEST                             |
