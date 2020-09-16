@@ -71,11 +71,13 @@ Then edit `/etc/systemd/resolved.conf` to ensure only the following items are un
 DNS=8.8.8.8
 DNSStubListener=no
 ```
-After editing the file, update the symbolic link as follows:
+After editing the file, update the symbolic link as follows, where -s means symbolic link, and -f replaces existing files:
 ```
-sudo ln -sf /ru/systemd/resolve/resolv.conf /etc/resolv.conf
+sudo ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
 ```
 Check whether the service is still listening on Port 53 with the earlier command (DOES SERVICE NEED A RESTART?)
+
+CHECK /ETC/RESOLV.CONF - ARCHLINUX PAGE SUGGESTS NAMESERVER ::1 AND NAMESERVER 127.0.0.1 BE THE ONLY NAME SERVERS? 
 
 #### Second technique for disabling resolved
 
