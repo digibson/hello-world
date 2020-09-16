@@ -109,7 +109,7 @@ $ sudo vi /etc/dnsmasq.conf
 ```
 All options are commented out apart from the final line which permits additional settings to be applied in a separate file leaving this original file intact as a reference.  
 ```
-$ sudo conf-dir=/etc/dnsmasq.d
+conf-dir=/etc/dnsmasq.d
 ```
 ```
 $ sudo vi /etc/dnsmasq.d/southparkley.net
@@ -130,7 +130,7 @@ no-resolv
 no-poll
 server=8.8.8.8
 server=8.8.4.4
-cashe-size=1000
+cache-size=1000
 listen-address=::1, 127.0.0.1, 192.168.157.30  # added later
 ```
 
@@ -190,4 +190,4 @@ Type `Ctrl+Shift+M` for the preview.
 | Header One     | Header Two     |
 | :------------- | :------------- |
 | Item One       | Item Two       |
-|TEST                             |
+|TEST                             | 
