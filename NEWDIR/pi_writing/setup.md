@@ -73,8 +73,11 @@ DNSStubListener=no
 ```
 After editing the file, update the symbolic link as follows, where -s means symbolic link, and -f replaces existing files:
 ```
-sudo ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
+$sudo ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
 ```
+
+IS THAT RIGHT OR DOES RUN SIT BELOW /VAR/ ??
+
 Check whether the service is still listening on Port 53 with the earlier command (DOES SERVICE NEED A RESTART?)
 
 CHECK /ETC/RESOLV.CONF - ARCHLINUX PAGE SUGGESTS NAMESERVER ::1 AND NAMESERVER 127.0.0.1 BE THE ONLY NAME SERVERS? 
@@ -92,17 +95,17 @@ $ sudo rm /etc/resolv.conf
 ```
 Then create new resolv.conf file.
 ```
-echo "nameserver 8.8.8.8" > /etc/resolv.conf
+$ echo "nameserver 8.8.8.8" > /etc/resolv.conf
 ```
 #### Configuring DNSMasq
 
 ACTUAL YOUTUBE VIDEO:
 ```
-sudo apt install dnsmasq
+$ sudo apt install dnsmasq
 ```
 The main configuration file for Dnsmasq is `/etc/dnsmasq.conf`. Configure Dnsmasq by modifying this file.
 ```
-sudo vi /etc/dnsmasq.conf
+$ sudo vi /etc/dnsmasq.conf
 ```
 All options are commented out apart from the final line which permits additional settings to be applied in a separate file leaving this original file intact as a reference.  
 ```
@@ -113,6 +116,8 @@ $ sudo vi /etc/dnsmasq.d/southparkley.net
 ```
 Edit the file as follows:
 ```
+# log-queries
+# logfacility=/var/log/dnsmasq.log
 no-dhcp-interface=ens160                       # OR THE ACTUAL ETHERNET INTERFACE FOR THE PI
 bogus-priv
 domain=southparkley.net
