@@ -113,18 +113,20 @@ $ sudo vi /etc/dnsmasq.d/southparkley.net
 ```
 Edit the file as follows:
 ```
-no-dhcp-interface=ens160 #OR THE ACTUAL ETHERNET INTERFACE FOR THE PI
+no-dhcp-interface=ens160                       # OR THE ACTUAL ETHERNET INTERFACE FOR THE PI
 bogus-priv
 domain=southparkley.net
 expand-hosts
-no-hosts # do not look at the local /etc/hosts file for addresses
-addn-hosts=/etc/hostnames.txt # OR ANY OTHER FILENAME
-local=/southparkley.net/ #NEVER RESOLVE THIS EXTERNALLY
-domain-needed #never forward requests without dots etc in
+no-hosts                                       # do not look at the local /etc/hosts file for addresses
+addn-hosts=/etc/hostnames.txt                  # OR ANY OTHER FILENAME
+local=/southparkley.net/                       #NEVER RESOLVE THIS EXTERNALLY
+domain-needed                                  #never forward requests without dots etc in
 no-resolv
 no-poll
 server=8.8.8.8
 server=8.8.4.4
+cashe-size=1000
+listen-address=::1, 127.0.0.1, 192.168.157.30  # added later
 ```
 
 The alternative is to use etc hosts where there are localhost items too.
@@ -134,7 +136,7 @@ $ sudo vi /etc/hostnames.txt
 
 ```
 192.168.157.23 nest.southparkley.net nest
-192.168.157.30 swift.southparkley.net swift
+192.168.157.30 swift.southparkley.net swift cookbook.southparkley.net cookbook
 192.168.157.31 songthrush
 ```
 Start dnsmasq
@@ -152,6 +154,7 @@ $ sudo systemctl is-enabled dnsmasq
 Now the router DNS server must be pointed at the IP address of the raspberry pi, and the secondary server can be pointed towards Google's DNS server (8.8.8.8) in case the raspberry pi is down.
 
 LOOK FURTHER AT DNS CACHING ETC
+CHECK OUT DNSSEC ??
 
 
 
