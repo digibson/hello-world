@@ -52,9 +52,6 @@ Without having to pay to reserve a domain name, I would like to be able to type 
 The open source linux program dnsmasq is capable of acting as a simple DNS server on the raspberry pi for the purposes that I need.  While a router is often set to a default DNS server address in order to resolve a domain name into an IP address, it can be redirected towards different primary and secondary DNS server addresses.  In my case, I intend to have the router check the raspberry pi DNS server to determine if it can find the IP address first, and serve that up where found.  This will work fine for my intranet, but the internal DNS server will not know how to deal with anything other than internal website requests.  Unresolved queries (being anything seeking external content) can then be passed upstream to external DNS servers to field the request.  While it may create large files, system logs can also be stored to track the requests that are being made for external websites.
 
 The first step is to ensure the repository is up to date and that packages are upgraded.
-
-{ENSURE THIS INSTRUCTION DOES NOT REPEAT THROUGHOUT}
-
 ```
 $ sudo apt update && sudo apt upgrade -y && sudo reboot
 ```
@@ -63,14 +60,7 @@ A number of testing tools are required when verifying the function of the DNS se
 ```
 $ sudo apt install net-tools && apt install dnsutils
 ```
-Recent versions of Ubuntu use systemd-resolve which binds to port 53 and will interfere with DNSMasq.  It must be disabled but not before DNSMasq is installed:
-```
-$ sudo apt install dnsmasq
-```
-
-I found two different approaches to removing systemd-resolve and leave both in until one is confirmed as working.  
-
-Prior to making changes to systemd-resolve, it should be confirmed whether any service is already running and binding port 53.
+Recent versions of Ubuntu use systemd-resolve which binds to port 53 and will interfere with DNSMasq and must be disabled.  I found a number of similar approaches to removing systemd-resolve and list them here, with the first containing more narrative until I confirm its function and remove the other options.  Prior to making changes to systemd-resolve, it should be confirmed whether any service is already running and binding port 53.
 
 Use the following command to view the services that are currently running, where -l only shows listening sockets, -t requests tcp connections only, -n to show numerical addresses, -p shows the process ID and the process name, and grep -w show items that match the exact string.  Omitting the grep command will show all services matching the criteria above.  
 ```
@@ -83,20 +73,21 @@ Run the following command to stop systemd-resolve
 ```
 sudo systemctl stop systemd-resolved
 ```
-Delete /etc/resolv.conf and create again. This is important, because resolv.conf is a symbolic link to /run/systemd/resolve/stub-resolv.conf by default. If undeleted, the file will be overwritten by systemd on reboot (even though  systemd-resolved was disabled). Also NetworkManager (NM) checks if it is a symbolic link to detect systemd-resolved configuration.
+Delete `/etc/resolv.conf` and recreate it. This is important, because `resolv.conf` is a symbolic link to `/run/systemd/resolve/stub-resolv.conf` by default. If undeleted, the file will be overwritten by systemd on reboot (even though  systemd-resolved was disabled). Also NetworkManager checks if it is a symbolic link to detect the systemd-resolved configuration.
 ```
 $ sudo rm /etc/resolv.conf
 $ sudo touch /etc/resolv.conf
 ```
-
-
-
-
-
-
-{DO NOT TOUCH `/etc/systemd/resolved.conf` AS IT MAY BE OVERWITTEN ON UPGRADE. INSTEAD DO THE FOLLOWING:}
+The contents of `/etc/resolv.conf` should be updated initially to include the router IP address as the name server.  Upon installation of DNSMasq, this will be moved into a configuration file and the nameserver changed to local host, i.e. 127.0.0.1, and the settings applied will redirect to the internally defined address lookup followed by any other DNS server addresses provided. 
 ```
-$ cat /etc/systemd/resolved.conf.d/noresolved.conf
+$ cat /etc/resolv.conf
+# Use local dnsmasq for resolving
+nameserver 192.168.157.23
+```
+
+To ensure the service does not interfere with DNSMasq in future the configuration must be alterred.  Note that, while this configuration could be applied within the main `/etc/systemd/resolved.conf` configuration file, this file is prone to being rewritten upon package upgrades.  Instead a new configuration file is created inside the resolved configuration folder, setting the DNSStubListener to no.
+```
+$ sudo cat /etc/systemd/resolved.conf.d/noresolved.conf
 [Resolve]
 DNSStubListener=no
 ```
@@ -108,25 +99,18 @@ OR disable the service:
 ```
 $ sudo systemctl disable systemd-resolved.service
 ```
-Disable overwriting of /etc/resolv.conf by NM (there is also an option rc-manager, but it does not work, despite it is described in a manual):
-
+The next step is to disable overwriting /etc/resolv.conf by NetworkManager by creating an additonal configuration file as follows:
 ```
-$ cat /etc/NetworkManager/conf.d/disableresolv.conf
+$ sudo cat /etc/NetworkManager/conf.d/disableresolv.conf
 [main]
 dns=none
 ```
-and restart it:
+and restarting the NetworkManager service:
 ```
 $ sudo systemctl restart NetworkManager
 ```
-Use dnsmasq for resolving:
-```
-$ cat /etc/resolv.conf
-# Use local dnsmasq for resolving
-nameserver 127.0.0.1
-```
 
-
+### Other technique wording and approach to be refined or removed when number one confirmed as working
 DON'T DO THIS - SEE ABOVE: Then edit `/etc/systemd/resolved.conf` to ensure only the following items are uncommented:
 ```
 [Resolve]
@@ -161,7 +145,7 @@ Then create new resolv.conf file.
 ```
 $ echo "nameserver 8.8.8.8" > /etc/resolv.conf
 ```
-#### Configuring DNSMasq
+#### Installing and configuring DNSMasq
 
 ACTUAL YOUTUBE VIDEO:  INSTALL BEFORE REMOVING ANYTHING ELSE!!
 ```
@@ -182,8 +166,9 @@ Edit the file as follows:
 ```
 # log-queries
 # logfacility=/var/log/dnsmasq.log
-no-dhcp-interface=ens160                       # OR THE ACTUAL ETHERNET INTERFACE FOR THE PI
+no-dhcp-interface=eth0                         # OR THE ACTUAL ETHERNET INTERFACE FOR THE PI
 bogus-priv
+bind-interfaces                                # Bind to the interface to make sure we aren't sending things elsewhere
 domain=southparkley.net
 expand-hosts
 no-hosts                                       # do not look at the local /etc/hosts file for addresses
@@ -192,10 +177,10 @@ local=/southparkley.net/                       #NEVER RESOLVE THIS EXTERNALLY
 domain-needed                                  #never forward requests without dots etc in
 no-resolv
 no-poll
-server=8.8.8.8
+server=8.8.8.8                                 # Forward DNS requests to Google DNS
 server=8.8.4.4
 cache-size=1000
-listen-address=::1, 127.0.0.1, 192.168.157.30  # added later
+listen-address=::1, 127.0.0.1, 192.168.157.30  # added later - IS THIS NEEDED?
 ```
 
 The alternative is to use etc hosts where there are localhost items too.
